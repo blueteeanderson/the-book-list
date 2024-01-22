@@ -1,0 +1,27 @@
+Get trending now
+https://openlibrary.org/trending/now.json
+
+
+{
+"key": "/works/OL24337306W",
+"title": "Kargil",
+"edition_count": 1,
+"first_publish_year": 2019,
+"has_fulltext": false,
+"public_scan_b": false,
+"cover_edition_key": "OL32211447M",
+"cover_i": 10859107,
+"author_key": [
+"OL8071197A"
+],
+"author_name": [
+"Rachna Bisht Rawat"
+]
+},
+
+
+to get a cover
+//covers.openlibrary.org/b/id/781502-M.jpg
+(-S = small -M=medium)
+
+

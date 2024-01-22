@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block content %}
+  {% if book|length == 0 %}
+    <h3>Sorry, no books found</h3>
+  {% else %}
+    <div class="container">   
+        <h3 class="card-title text-center mb-5">{{book.title}}</h3>
+        <p>
+            <img loading="lazy" class="float-start me-3" src="//covers.openlibrary.org/b/id/{{ book.cover }}-M.jpg" />
+            <strong>Description: </strong>{{book.description}}
+        </p>
+        <p>
+            <strong>Author(s): </strong> <br />
+                {% for author in book.authors %}
+                    - {{author}}<br />
+                {% endfor %}
+
+        </p>
+        <p>
+            <strong>Published: </strong>{{book.published}}
+        </p>
+            <a class="btn btn-outline-primary" href="/users/{{book.user_id}}/{{book.key}}/review">Leave a review</a>
+            <a class="btn btn-outline-secondary" href="/users/{{book.user_id}}/likes">Back to your likes</a>
+
+        <h4>Reviews</h4>
+        <ul class="list-group">
+            {% for review in book.reviews %}
+             <li class="list-group-item">{{review.review}} - by {{review.user.username}}</li>
+            {% endfor %}
+          </ul>
+    </div>
+
+  {% endif %}
+{% endblock %}

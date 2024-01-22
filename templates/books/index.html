@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block content %}
+  {% if books|length == 0 %}
+    <h3>Sorry, no books found</h3>
+  {% else %}
+
+
+        {% for book in books %}
+            {% if loop.index % 3 ==1 %}
+            <div class="row card-deck">
+            {% endif %}
+                <div class="col-4 card">   
+                    <div class="card-header">
+                        <h5 class="card-title text-center">{{book.title}}</h5>
+                    </div>   
+                    <div class="card-body">
+                        <div class="card-text text-center">
+                            <img loading="lazy" src="//covers.openlibrary.org/b/id/{{ book.cover_i }}-S.jpg" />
+                            <div class="text-start">
+                                <strong>Author(s): </strong> 
+                                {% for author in book.author_name %}
+                                    {{author}}{{ ", " if not loop.last else "" }}
+                                {% endfor %}
+                                <br />
+                                <strong>Published: </strong>{{book.first_publish_year}}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer text-muted text-center">
+                        <a href="{{book.key}}" class="btn btn-primary">More..</a>
+                    </div>
+                </div>
+            {% if loop.index % 3 ==0 %}
+            </div>
+            {% endif %}
+            {% if loop.last and loop.index % 3 != 0%}
+            </div>
+            {% endif %}
+
+        {% endfor %}
+
+  {% endif %}
+{% endblock %}
