@@ -19,9 +19,11 @@
         <p>
             <strong>Published: </strong>{{book.published}}
         </p>
-            <a class="btn btn-outline-secondary" href="/users/{{book.user_id}}/likes">Back to your likes</a>
+          <form action="/books/book/{{book.key}}/like" method="post">
+            <a class="btn btn-outline-secondary" href="/users/{{book.user_id}}/readers">Back to your likes</a>
             <a class="btn btn-outline-primary" href="/users/{{book.user_id}}/{{book.key}}/review">Leave a review</a>
-            <a class="btn btn-outline-danger" href="/users/{{book.user_id}}/{{book.key}}/delete"">Remove book from your likes</a>
+            <button type="submit" class="btn btn-outline-success" >Add to likes</button>
+          </form>
 
         <h4>Reviews</h4>
         <ul class="list-group">

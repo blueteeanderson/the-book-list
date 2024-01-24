@@ -104,7 +104,7 @@ def login():
         if user:
             do_login(user)
             flash(f"Hello, {user.username}!", "success")
-            return redirect("/")
+            return redirect("/books/trending")
 
         flash("Invalid credentials.", 'danger')
 
@@ -122,35 +122,6 @@ def logout():
 ##############################################################################
 # General user routes:
 
-@app.route('/users')
-def list_users():
-    """Page with listing of users.
-
-    Can take a 'q' param in querystring to search by that username.
-    """
-
-    search = request.args.get('q')
-
-    if not search:
-        users = User.query.all()
-    else:
-        users = User.query.filter(User.username.like(f"%{search}%")).all()
-
-    return render_template('users/index.html', users=users)
-
-
-@app.route('/users/<int:user_id>')
-def users_show(user_id):
-    """Show user profile."""
-
-    user = User.query.get_or_404(user_id)
-
-    # snagging messages in order from the database;
-    # user.messages won't be in order by default
-    messages = []
-    return render_template('users/show.html', user=user, messages=messages)
-
-
 
 @app.route('/users/<int:user_id>/likes')
 def users_likes(user_id):
@@ -159,60 +130,39 @@ def users_likes(user_id):
     if not g.user or g.user.id != int(user_id):
         flash("Access unauthorized.", "danger")
         return redirect("/")
-    books = []
 
     likes = (Like
             .query
             .filter(Like.user_id == user_id)
             .all())
-    
-    for like in likes:
-        resp = requests.get(
-            f"https://openlibrary.org/works/{like.book_key}.json",
-            params={}
-        )
-        resp = resp.json()
-
-        # make sure there is a description
-        desc = resp.get("description", 'No description')
-    
-        if isinstance(desc, dict):
-            desc = desc.get("value",'No description')
-
-        # make sure there is a cover
-        cover = resp.get("covers", ['No image available'])
-        cover = cover[0]
-
-        # make sure there is a published date
-        published = resp.get("first_publish_date", 'No date available')
-
-        authors = []
-
-        for author in resp['authors']:
-            authorResp = requests.get(
-                f"https://openlibrary.org/{author['author']['key']}.json",
-                params={}
-            )
-
-            authorResp = authorResp.json()
-
-            authors.append(authorResp['name'])
-            authors = list(set(authors ))
-        
-
-        book = {
-            "title": resp['title'],
-            "published": published,
-            "description": desc,
-            "authors" : authors,
-            "cover" : cover,
-            "key" : like.book_key
-        }
-
-        books.append(book)
+    books =  make_books_from_lies(likes)
 
 
     return render_template("/users/likes.html", books=books)
+
+@app.route('/users/<int:user_id>/readers')
+def readers_likes(user_id):
+    """Show list of likes of all readers."""
+ 
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+    
+
+    likes = (Like
+            .query
+            .filter(Like.user_id != user_id)
+            .all())
+    
+    books = make_books_from_lies(likes)
+
+
+    return render_template("/users/readers.html", books=books)
+
+
+
+
+
 
 @app.route('/users/<int:user_id>/<key>', methods=["GET"])
 def users_book_details(user_id,key):
@@ -277,6 +227,70 @@ def users_book_details(user_id,key):
 
     return render_template('users/book.html', book=book)
 
+@app.route('/users/<int:user_id>/<key>/readers', methods=["GET"])
+def readers_book_details(user_id,key):
+    """ Show a book's details"""
+    
+    if not g.user or g.user.id != int(user_id):
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    resp = requests.get(
+            f"https://openlibrary.org/works/{key}.json",
+            params={}
+       )
+       
+    resp = resp.json()
+
+    # make sure there is a description
+    desc = resp.get("description", 'No description')
+  
+    if isinstance(desc, dict):
+        desc = desc.get("value",'No description')
+
+    # make sure there is a cover
+    cover = resp.get("covers", ['No image available'])
+    cover = cover[0]
+
+    # make sure there is a published date
+    published = resp.get("first_publish_date", 'No date available')
+
+    authors = []
+
+    for author in resp['authors']:
+        authorResp = requests.get(
+            f"https://openlibrary.org/{author['author']['key']}.json",
+            params={}
+        )
+
+        authorResp = authorResp.json()
+
+        authors.append(authorResp['name'])
+        authors = list(set(authors ))
+
+    # get reviews and user associated with book
+    reviews = (Review
+            .query
+            .filter(Review.book_key == key)
+            .order_by(Review.timestamp.desc())
+            .limit(100)
+            .all())
+    
+
+    book = {
+        "title": resp['title'],
+        "published": published,
+        "description": desc,
+        "authors" : authors,
+        "cover" : cover,
+        "key" : key,
+        "reviews" : reviews,
+        "user_id" : user_id
+    }
+
+    return render_template('users/book_readers.html', book=book)
+
+
 @app.route('/users/<int:user_id>/<book_key>/review', methods=["GET", "POST"])
 def user_review_add(user_id,book_key):
     """Add a review:
@@ -299,41 +313,58 @@ def user_review_add(user_id,book_key):
 
     return render_template('users/review.html', form=form)
 
-"""
-@app.route('/users/stop-following/<int:follow_id>', methods=['POST'])
-def stop_following(follow_id):
-   
 
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
+def make_books_from_lies(likes):
+     books = []
+     
+     for like in likes:
+        resp = requests.get(
+            f"https://openlibrary.org/works/{like.book_key}.json",
+            params={}
+        )
+        resp = resp.json()
 
-    followed_user = User.query.get(follow_id)
-    g.user.following.remove(followed_user)
-    db.session.commit()
+        # make sure there is a description
+        desc = resp.get("description", 'No description')
+    
+        if isinstance(desc, dict):
+            desc = desc.get("value",'No description')
 
-    return redirect(f"/users/{g.user.id}/following")
+        # make sure there is a cover
+        cover = resp.get("covers", ['No image available'])
+        cover = cover[0]
 
-@app.route('/users/add_like/<int:message_id>', methods=['POST'])
-def add_like(message_id):
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
-    #get message includes user id
-    msg = Message.query.get_or_404(message_id)
-    #if the message is by user, fobid access to liking it
-    if msg.user_id == g.user.id:
-        return abort(403)
-    #remove like 
-    if msg in g.user.likes:
-        g.user.likes = [like for like in g.user.likes if like != msg]
-    #add like
-    else:
-        g.user.likes.append(msg)
-    db.session.commit()
+        # make sure there is a published date
+        published = resp.get("first_publish_date", 'No date available')
 
-    return redirect("/")
-"""
+        authors = []
+
+        for author in resp['authors']:
+            authorResp = requests.get(
+                f"https://openlibrary.org/{author['author']['key']}.json",
+                params={}
+            )
+
+            authorResp = authorResp.json()
+
+            authors.append(authorResp['name'])
+            authors = list(set(authors ))
+        
+
+        book = {
+            "title": resp['title'],
+            "published": published,
+            "description": desc,
+            "authors" : authors,
+            "cover" : cover,
+            "key" : like.book_key
+        }
+
+        books.append(book)
+
+     return books
+
+
 
 @app.route('/users/profile', methods=["GET", "POST"])
 def profile():
@@ -383,25 +414,6 @@ def delete_user():
     return redirect("/signup")
 
 
-##############################################################################
-# Messages routes:
-"""
-@app.route('/messages/<int:message_id>/delete', methods=["POST"])
-def messages_destroy(message_id):
-
-
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
-
-    msg = Message.query.get(message_id)
-    db.session.delete(msg)
-    db.session.commit()
-
-    return redirect(f"/users/{g.user.id}")
-"""
-
-##############################################################################
 # books pages
 
 @app.route('/books/trending', methods=["GET"])
@@ -425,6 +437,43 @@ def books_trending():
         book['key'] = "/books/book/" + book['key']
 
     return render_template('books/index.html', books=books)
+
+@app.route('/books/search', methods=["GET"])
+def books_search():
+    """ Show a list of  books by category and search term"""
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+    
+    search_term = request.args.get('q')
+    search_cat = request.args.get('category')
+
+    params = [('limit', '15'),('offset', '1')]
+
+    if search_term > 'subject':
+        p = ('subject',search_cat)
+    elif search_term > 'title':
+        p = ('title',search_cat)
+    else: 
+        p = ('author',search_cat)
+
+    params.append(('subject', search_cat))
+    resp = requests.get(
+        "https://openlibrary.org/search.json",
+        params = params
+
+    )
+
+    books = resp.json()['docs']
+    for book in books:
+        book['author_name'] = book.get("author_name", ["No author listed"]) #default if no author
+        book['author_name'] = list(set(book['author_name'] )) #remove dupes
+        book['key'] = book['key'].replace("works/","")
+        book['key'] = "/books/book/" + book['key']
+
+    return render_template('books/search.html', books=books)
+
 
 @app.route('/books/book/<key>', methods=["GET"])
 def book_details(key):

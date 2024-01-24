@@ -74,12 +74,13 @@ nav form.navbar-form {
 }
 
 #search.form-control {
-  border-radius: 20px;
+  border-radius: 5px;
   margin-bottom: 0;
   width: 100%;
   font-size: 13px;
   padding-right: 28px;
   box-sizing: border-box;
+  min-width: 300px;
 }
 
 #search.form-control + .btn {

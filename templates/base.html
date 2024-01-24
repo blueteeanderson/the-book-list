@@ -29,8 +29,15 @@
     <ul class="nav navbar-nav navbar-right">
       {% if request.endpoint != None %}
       <li>
-        <form class="navbar-form navbar-right" action="/users">
-          <input name="q" class="form-control" placeholder="Search The Book List" id="search">
+        <form class="navbar-form navbar-right" action="/books/search">
+          <label class="visually-hidden" for="category">Search category</label>
+          <select class="form-select" id="category" name="category">
+            <option value="title">Title</option>
+            <option value="Subject">Subject</option>
+            <option value="author">Author</option>
+          </select>
+          <label class="visually-hidden" for="search">Search text</label>
+          <input name="q" class="form-control" required=true placeholder="Search The Book List" id="search">
           <button class="btn btn-default">
             <span class="fa fa-search"></span>
           </button>
@@ -47,7 +54,7 @@
         </a>
       </li>
       <li><a href="/books/trending">Trending Books</a></li>
-      <li><a href="/users">Readers</a></li>
+      <li><a href="/users/{{ g.user.id }}/readers">Readers</a></li>
       <li><a href="/logout">Log out</a></li>
       {% endif %}
     </ul>
