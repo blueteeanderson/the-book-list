@@ -104,27 +104,6 @@ class User(db.Model):
 
 
 
-    """ !delete
-    image_url = db.Column(
-        db.Text,
-        default="/static/images/default-pic.png",
-    )
-    
-    
-    header_image_url = db.Column(
-        db.Text,
-        default="/static/images/warbler-hero.jpg"
-    )
-    
-
-    bio = db.Column(
-        db.Text,
-    )
-
-    location = db.Column(
-        db.Text,
-    )
-    """
     
 
     def __repr__(self):

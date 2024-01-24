@@ -153,57 +153,7 @@ nav + .container {
   margin-bottom: 1rem;
 }
 
-/* ===================== User profile */
 
-.join-message {
-  margin-top: 100px;
-}
-
-#profile-image,
-#profile-avatar {
-  border-radius: 100%;
-  display: block;
-  margin-left: -15px;
-}
-
-#profile-image {
-  margin: 0 auto 15px;
-  width: 100%;
-}
-
-#profile-avatar {
-  width: 200px;
-  height: 200px;
-  border: 5px solid #fff;
-  margin-top: -120px;
-  z-index: 1;
-  position: relative;
-  box-shadow: 0 1px 1px rgba(136, 153, 166, 0.15);
-}
-
-.timeline-image {
-  border-radius: 48px;
-  height: 48px;
-  width: 48px;
-  margin-top: 2px;
-}
-
-.message-area,
-.timeline-image {
-  display: inline-block;
-}
-
-.message-area {
-  margin-left: 10px;
-}
-
-#warbler-hero {
-  height: 360px;
-  margin-top: -16px;
-  opacity: 0.7;
-  background-size: cover;
-  background-position: top center;
-}
 
 .full-width {
   width: 100vw;
@@ -256,33 +206,7 @@ nav + .container {
   padding-top: 3px;
 }
 
-#messages {
-  position: relative;
-}
 
-#messages .message-link {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 1;
-}
-
-#messages .list-group-item a:not(.message-link) {
-  position: relative;
-  z-index: 2;
-}
-
-#messages .list-group-item {
-  display: flex;
-  align-items: flex-start;
-  padding: 7px 20px 12px;
-}
-
-#messages:not(.no-hover) .list-group-item:hover {
-  background-color: #e6ecf0;
-}
 
 #sidebar-username {
   margin-top: 30px;
