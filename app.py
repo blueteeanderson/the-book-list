@@ -8,6 +8,8 @@ from forms import UserAddForm, LoginForm,UserProfileForm, ReviewForm
 from models import db, connect_db, User, Review, Like
 import requests
 
+from helpers import make_books_from_likes
+
 CURR_USER_KEY = "curr_user"
 
 app = Flask(__name__)
@@ -135,7 +137,7 @@ def users_likes(user_id):
             .query
             .filter(Like.user_id == user_id)
             .all())
-    books =  make_books_from_lies(likes)
+    books =  make_books_from_likes(likes)
 
 
     return render_template("/users/likes.html", books=books)
@@ -154,14 +156,10 @@ def readers_likes(user_id):
             .filter(Like.user_id != user_id)
             .all())
     
-    books = make_books_from_lies(likes)
+    books = make_books_from_likes(likes)
 
 
     return render_template("/users/readers.html", books=books)
-
-
-
-
 
 
 @app.route('/users/<int:user_id>/<key>', methods=["GET"])
@@ -312,57 +310,6 @@ def user_review_add(user_id,book_key):
         return redirect(f"/users/{user_id}/{book_key}")
 
     return render_template('users/review.html', form=form)
-
-
-def make_books_from_lies(likes):
-     books = []
-     
-     for like in likes:
-        resp = requests.get(
-            f"https://openlibrary.org/works/{like.book_key}.json",
-            params={}
-        )
-        resp = resp.json()
-
-        # make sure there is a description
-        desc = resp.get("description", 'No description')
-    
-        if isinstance(desc, dict):
-            desc = desc.get("value",'No description')
-
-        # make sure there is a cover
-        cover = resp.get("covers", ['No image available'])
-        cover = cover[0]
-
-        # make sure there is a published date
-        published = resp.get("first_publish_date", 'No date available')
-
-        authors = []
-
-        for author in resp['authors']:
-            authorResp = requests.get(
-                f"https://openlibrary.org/{author['author']['key']}.json",
-                params={}
-            )
-
-            authorResp = authorResp.json()
-
-            authors.append(authorResp['name'])
-            authors = list(set(authors ))
-        
-
-        book = {
-            "title": resp['title'],
-            "published": published,
-            "description": desc,
-            "authors" : authors,
-            "cover" : cover,
-            "key" : like.book_key
-        }
-
-        books.append(book)
-
-     return books
 
 
 
